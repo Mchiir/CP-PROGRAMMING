@@ -94,6 +94,9 @@ vector<string> infix_to_postfix(const string& infix_expression, const set<string
     stack<string> operations_stack;
 
     while(ss >> token){ // whitespace splitting
+        // cout << "\n current token: " << token;
+
+        
         if(isNumber(token)){
             postfix.push_back(token);
 
@@ -112,14 +115,10 @@ vector<string> infix_to_postfix(const string& infix_expression, const set<string
                     throw invalid_argument("Mismatched parentheses");
 
                 operations_stack.pop();// removing closing bracket
-            }
-            
-            if(!operations_stack.empty()){
-                postfix.push_back(token);
             }else{
                 // operator handling
 
-                while(!operations_stack.empty() && precedence(operations_stack.top()) >= precedence(token) && operations_stack.top() != "("){
+                if(!operations_stack.empty() && precedence(operations_stack.top()) >= precedence(token) && operations_stack.top() != "(" && operations_stack.top() != ")"){
                     postfix.push_back(operations_stack.top());
                     operations_stack.pop();
                 }
@@ -146,11 +145,6 @@ vector<string> infix_to_postfix(const string& infix_expression, const set<string
 int postfix_to_value(const vector<string>& postfix, const set<string>& supported_operators){
     my_stack *top;
     create(&top);
-    cout << "\nThe postfix vector: ";
-    for(const auto& token : postfix ){
-        cout << token << " ";
-    }
-    cout << endl;
     
     for(const string& token : postfix){
         if(isNumber(token)){
@@ -167,7 +161,7 @@ int postfix_to_value(const vector<string>& postfix, const set<string>& supported
             else if(token == "*")
                 push(&top, (val1*val2));
             else if(token == "/"){
-                if(val2 == 0) throw invalid_argument("Can't divide by zero");
+                if(val2 == 0) throw runtime_error("Can't divide by zero");
                     push(&top, (val1/val2));
             }else
                 continue;
@@ -181,18 +175,35 @@ int postfix_to_value(const vector<string>& postfix, const set<string>& supported
 }
 
 int calculate(const string& infix_input){
+    cout << "\nReceived infix_input: " << infix_input;
+
     const set<string> SUPPORTED_OPERATORS = {"+", "-", "*", "/", "(", ")"};
 
     vector<string> postfix = infix_to_postfix(infix_input, SUPPORTED_OPERATORS);
+
+    cout << "\nThe postfix vector: ";
+    for(const auto& token : postfix ){
+        cout << token << " ";
+    }
+    cout << endl;
+
     int result = postfix_to_value(postfix, SUPPORTED_OPERATORS);
 
     return result;
 }
 
 int main(){
-    string random_expression = "6 * 3 - ( 4 - 5 ) + 2";
+    string random_expression1 = "6 * 3 - ( 4 - 5 ) + 2";
+    string random_expression2 = "( 4 + 7 ) + 12 / 3";
+    string random_expression3 = "12 * 4 / 3 + ( 32 + 5 ^ 1 )";
 
-    int result = calculate(random_expression);
-    cout << "\n" << random_expression << " = " << result << endl;
+    int result1 = calculate(random_expression1);
+    cout << "\n" << random_expression1 << " = " << result1 << endl;
+
+    int result2 = calculate(random_expression2);
+    cout << "\n" << random_expression2 << " = " << result2 << endl;
+
+    int result3 = calculate(random_expression3);
+    cout << "\n" << random_expression3 << " = " << result3 << endl;
     return 0;
 }
