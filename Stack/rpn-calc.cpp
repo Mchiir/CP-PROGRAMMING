@@ -1,8 +1,7 @@
-// Let's implement RPN with linked-list stack
+// Let's implement RPN with linked-list stack and stack from c++ STL(Standard Template library)
 // supported operators (+, -, *, /, () , ^)
 
 #include <iostream>
-#include <stdio.h>
 #include <string>
 #include <sstream>
 #include <vector>
@@ -172,6 +171,17 @@ int postfix_to_value(const vector<string>& postfix, const set<string>& supported
     }
     
     return pop(&top);
+}
+
+
+bool infix_validator(const string& infix, const set<string>& supported_operators){
+    if(infix.empty()) return false;
+
+    string corrected_infix = "";
+    
+
+    
+    return true;
 }
 
 int calculate(const string& infix_input){
