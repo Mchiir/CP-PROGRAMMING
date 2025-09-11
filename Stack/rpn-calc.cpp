@@ -1,5 +1,5 @@
 // Let's implement RPN with linked-list stack and stack from c++ STL(Standard Template library)
-// supported operators (+, -, *, /, () , ^)
+// supported operators (+, -, *, /, (, ) )
 
 #include <iostream>
 #include <string>
@@ -12,6 +12,9 @@
 
 using namespace std;
 
+// supported operators
+const set<string> SUPPORTED_OPERATORS = {"+", "-", "*", "/", "(", ")"};
+
 struct node {
     struct node *next;
     int value;
@@ -19,8 +22,136 @@ struct node {
 
 typedef struct node my_stack;
 
-my_stack *top;
+// Function declarations
 
+// Custom stack
+void create(my_stack **top);
+int isEmpty(my_stack **top);
+void push(my_stack **top, int element);
+int pop(my_stack **top);
+void display(my_stack **top);
+
+// Helper functions
+bool isNumber(const string& s);
+int precedence(const string& op);
+
+// RPN
+vector<string> infix_to_postfix(const string& infix_expression);
+int postfix_to_value(const vector<string>& postfix);
+string format_infix(const string& infix);
+int calculate(const string& infix_input);
+bool validate_infix(const string& infix);
+
+void show_menu(){
+    cout << "\n========= CLI Calculator Menu =========\n";
+    cout << "1. Check if string is a number\n";
+    cout << "2. Validate infix expression\n";
+    cout << "3. Convert infix to postfix\n";
+    cout << "4. Evaluate postfix expression\n";
+    cout << "5. General calculator (evaluate infix)\n";
+    cout << "6. Exit\n";
+    cout << "=======================================\n";
+    cout << "Enter your choice: ";
+}
+
+
+int main(){
+    // string random_expression1 = "6 * 3 - ( 4 - 5 ) + 2";
+    // string random_expression2 = "( 4 + 7 ) + 12 / 3";
+    // string random_expression3 = "12 * 4 / 3 + ( 32 + 5 ^ 1 )";
+    // int result1 = calculate(random_expression1);
+    // cout << "\n" << random_expression1 << " = " << result1 << endl;
+
+    // int result2 = calculate(random_expression2);
+    // cout << "\n" << random_expression2 << " = " << result2 << endl;
+
+    // int result3 = calculate(random_expression3);
+    // cout << "\n" << random_expression3 << " = " << result3 << endl;
+
+    cout << "\nWelcome!, Let's evaluate mathematical expressions";
+    cout << "\nSupported operators: ";
+    for(const auto& op: SUPPORTED_OPERATORS){
+        cout << op << " ";
+    }
+    cout << endl;
+
+    while(true){
+        show_menu();
+        int choice;
+        cin >> choice;
+        cin.ignore();
+
+        if (choice == 6) {
+            std::cout << "Goodbye!\n";
+            break;
+        }
+
+        std::string input;
+        switch (choice) {
+            case 1: {
+                std::cout << "Enter a string to check if it's a number: ";
+                std::getline(std::cin, input);
+                bool result = isNumber(input);
+                std::cout << "'" << input << "' is " << (result ? "" : "not ") << "a number.\n";
+                break;
+            }
+            case 2: {
+                std::cout << "Enter infix expression for validation: ";
+                std::getline(std::cin, input);
+                bool result = validate_infix(input);
+                std::cout << "Expression is " << (result ? "VALID" : "INVALID") << ".\n";
+                break;
+            }
+            case 3: {
+                std::cout << "Enter infix expression to convert to postfix: ";
+                std::getline(std::cin, input);
+                if (!validate_infix(input)) {
+                    std::cout << "Invalid infix expression!\n";
+                    break;
+                }
+                std::vector<std::string> postfix = infix_to_postfix(input);
+                std::cout << "Postfix: ";
+                for (const auto& token : postfix)
+                    std::cout << token << " ";
+                std::cout << std::endl;
+                break;
+            }
+            case 4: {
+                std::cout << "Enter postfix expression (space separated): ";
+                std::getline(std::cin, input);
+                std::vector<std::string> tokens;
+                std::string token;
+                std::istringstream iss(input);
+                while (iss >> token) {
+                    tokens.push_back(token);
+                }
+                int value = postfix_to_value(tokens);
+                std::cout << "Value of postfix expression: " << value << std::endl;
+                break;
+            }
+            case 5: {
+                std::cout << "Enter infix expression to evaluate: ";
+                std::getline(std::cin, input);
+                int result = calculate(input);
+
+                std::cout << "Result: " << result << std::endl;
+                break;
+            }
+            default: {
+                std::cout << "Invalid choice! Please try again.\n";
+                break;
+            }
+        }
+    }
+
+    
+    return 0;
+}
+
+
+// Function defintions
+
+// my_stack *top;
 void create(my_stack **top){
     (*top) = nullptr;
 }
@@ -86,7 +217,7 @@ int precedence(const string& op){
     return 0;
 }
 
-vector<string> infix_to_postfix(const string& infix_expression, const set<string>& supported_operators){
+vector<string> infix_to_postfix(const string& infix_expression){
     stringstream ss(infix_expression);
     vector<string> postfix;
     string token;
@@ -99,7 +230,7 @@ vector<string> infix_to_postfix(const string& infix_expression, const set<string
         if(isNumber(token)){
             postfix.push_back(token);
 
-        }else if(supported_operators.count(token)){
+        }else if(SUPPORTED_OPERATORS.count(token)){
             if(token == "("){
                 operations_stack.push(token);
             }else if(token == ")"){
@@ -141,14 +272,14 @@ vector<string> infix_to_postfix(const string& infix_expression, const set<string
     return postfix;
 }
 
-int postfix_to_value(const vector<string>& postfix, const set<string>& supported_operators){
+int postfix_to_value(const vector<string>& postfix){
     my_stack *top;
     create(&top);
     
     for(const string& token : postfix){
         if(isNumber(token)){
             push(&top, stoi(token));
-        }else if(supported_operators.count(token)){
+        }else if(SUPPORTED_OPERATORS.count(token)){
             int val2 = pop(&top);
             if(isEmpty(&top)) throw runtime_error("Not enough operands");
             int val1 = pop(&top);
@@ -174,22 +305,64 @@ int postfix_to_value(const vector<string>& postfix, const set<string>& supported
 }
 
 
-bool infix_validator(const string& infix, const set<string>& supported_operators){
-    if(infix.empty()) return false;
+string format_infix(const string& infix){
+    if(infix.empty()) throw invalid_argument("Invalid infix: "+ infix);
+    if(SUPPORTED_OPERATORS.count(string(1, infix[0])) && string(1, infix[0]) != "(" && string(1, infix[0]) != ")") throw invalid_argument("Invalid infix: "+ infix);
 
     string corrected_infix = "";
-    
+    size_t i = 0;
+    while(i < infix.size()){
+        
+        if(isspace(infix[i])){
+            ++i;
+            continue;
+        }else if(isdigit(infix[i])){
+            string number = "";
 
+            while(i < infix.size() && isdigit(infix[i])){
+                number += infix[i];
+                ++i;
+            }
+        
+            corrected_infix += number + " ";
+        }else{
+            string op(1, infix[i]);
+            if(SUPPORTED_OPERATORS.count(op)){
+                corrected_infix += op + " ";
+                ++i;
+            } else {
+                throw invalid_argument("Invalid token in infinix: "+ op);
+            }
+        }
+    }
     
+    return corrected_infix;
+}
+
+bool validate_infix(const string& infix){
+    if(infix.empty()) return false;
+    if(SUPPORTED_OPERATORS.count(string(1, infix[0])) && infix[0] != '(')
+        return false;
+
+    for(char c : infix){
+        if(!isdigit(c) && !isspace(c) && !SUPPORTED_OPERATORS.count(string(1,c)))
+            return false;
+    }
     return true;
 }
 
+
 int calculate(const string& infix_input){
+    
+
     cout << "\nReceived infix_input: " << infix_input;
 
-    const set<string> SUPPORTED_OPERATORS = {"+", "-", "*", "/", "(", ")"};
+    string formated_infix = format_infix(infix_input);
 
-    vector<string> postfix = infix_to_postfix(infix_input, SUPPORTED_OPERATORS);
+    cout << "\nValidated infix: " << formated_infix;
+
+
+    vector<string> postfix = infix_to_postfix(formated_infix);
 
     cout << "\nThe postfix vector: ";
     for(const auto& token : postfix ){
@@ -197,23 +370,7 @@ int calculate(const string& infix_input){
     }
     cout << endl;
 
-    int result = postfix_to_value(postfix, SUPPORTED_OPERATORS);
+    int result = postfix_to_value(postfix);
 
     return result;
-}
-
-int main(){
-    string random_expression1 = "6 * 3 - ( 4 - 5 ) + 2";
-    string random_expression2 = "( 4 + 7 ) + 12 / 3";
-    string random_expression3 = "12 * 4 / 3 + ( 32 + 5 ^ 1 )";
-
-    int result1 = calculate(random_expression1);
-    cout << "\n" << random_expression1 << " = " << result1 << endl;
-
-    int result2 = calculate(random_expression2);
-    cout << "\n" << random_expression2 << " = " << result2 << endl;
-
-    int result3 = calculate(random_expression3);
-    cout << "\n" << random_expression3 << " = " << result3 << endl;
-    return 0;
 }
