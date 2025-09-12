@@ -1,4 +1,5 @@
 // Let's implement a queue with a linked-list with nodes holding integer values
+// front -> 10 -> 20 -> 30 -> 40 -> nullptr <- rear
 
 #include <iostream>
 #include <stdexcept>
@@ -6,69 +7,67 @@
 
 using namespace std;
 
-struct queue_base_structure {
-    struct queue_base_structure *next;
+struct queue_node {
+    queue_node *next;
     int value;
 };
 
-typedef struct queue_base_structure my_queue;
 
-void create(my_queue **rear){
-    *rear = nullptr;
+struct queue_structure {
+    queue_node *rear, *front;
+};
+
+typedef struct queue_structure my_queue;
+
+void create(my_queue **queue){
+    (*queue) = new my_queue();
+    (*queue)->rear = nullptr;
+    (*queue)->front = nullptr;
 }
 
-bool isEmpty(my_queue *rear){
-    return rear == nullptr;
+bool isEmpty(my_queue *queue){
+    return queue->rear == nullptr || queue->front == nullptr;
 }
 
-int size(my_queue *rear){
+int size(my_queue *queue){
     size_t length = 0;
 
-    if(isEmpty(rear)) return 0;
+    if(isEmpty(queue)) return 0;
 
-    my_queue *temp = rear;
+    queue_node *temp = queue->front;
     while(temp != nullptr){
         length++;
         temp = temp->next;
     }
-    cout << endl;
-   
+
     return length;
 }
 
-void enqueue(my_queue **rear, int value){
-    my_queue *new_node = new my_queue();
+void enqueue(my_queue **queue, int value){
+    queue_node *new_node = new queue_node();
     new_node->value = value;
+    new_node->next = nullptr;
 
-    new_node->next = *rear;
-    *rear = new_node;
+    if(size(*queue) == 0){
+        (*queue)->rear = (*queue)->front = new_node;
+    }else{
+        ((*queue)->rear)->next = new_node;
+        (*queue)->rear = new_node;
+    }
 }
 
-int dequeue(my_queue **rear){
+int dequeue(my_queue **queue){
     int front_value;
 
     try{
-        if(isEmpty(*rear)) throw runtime_error("Dequeuing failed. Queue is empty.");
-        else if(size(*rear) == 1){
-            front_value = (*rear)->value;
-            delete *rear;
+        if((*queue)->front == nullptr) throw runtime_error("Dequeuing failed. queue is empty.");
 
-            *rear = nullptr;
-        }else{
+        queue_node *temp = ((*queue)->front)->next;
 
-        my_queue *prev;
-        my_queue *temp;
-        
-        temp = *rear;
-        while(temp->next != nullptr){
-            prev = temp;
-            temp = temp->next;
-        }
+        front_value = ((*queue)->front)->value;
 
-        front_value = temp->value;
-        delete temp;
-        prev->next = nullptr;
-    }
+        delete (*queue)->front;
+        (*queue)->front = temp;
     } catch (const runtime_error& err){
         cerr << "\nError: " << err.what();
     }
@@ -76,11 +75,12 @@ int dequeue(my_queue **rear){
     return front_value;
 }
 
-void display(my_queue *rear){
+void display(my_queue *queue){
     try{
-        if(isEmpty(rear)) throw runtime_error("Can't display empty queue.");
+        if(isEmpty(queue)) throw runtime_error("Can't display empty queue.");
 
-        my_queue *temp = rear;
+        queue_node *temp = queue->front;
+
         cout << "\nQueue elements: ";
         while(temp != nullptr){
             cout << temp->value << " -> ";
@@ -93,20 +93,20 @@ void display(my_queue *rear){
 }
 
 int main(){
-    my_queue *rear;
-    create(&rear);
+    my_queue *queue;
+    create(&queue);
 
-    display(rear);
+    display(queue);
 
-    enqueue(&rear, 10);
-    enqueue(&rear, 20);
-    enqueue(&rear, 30);
-    enqueue(&rear, 40);
+    enqueue(&queue, 10);
+    enqueue(&queue, 20);
+    enqueue(&queue, 30);
+    enqueue(&queue, 40);
 
-    while(true){
-        cout << "\nQueue element: " << dequeue(&rear);
+    while(!isEmpty(queue)){
+        cout << "\nQueue element: " << dequeue(&queue);
     }
 
-    display(rear);
+    display(queue);
     return 0;
 }
